@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>沙排战术沙盘 · Beach Volleyball Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sea-deep:#06363f;
+    --sea:#0b5563;
+    --sea-line:#13727f;
+    --sand:#e8d4a0;
+    --sand-dark:#d8bf83;
+    --card:#f6efdc;
+    --card-2:#fbf6e8;
+    --sun:#ffc94d;
+    --coral:#ff6a3d;
+    --coral-deep:#e1532a;
+    --ink:#10262c;
+    --ink-soft:#3c5158;
+    --cream:#f3f7f5;
+    --line:rgba(255,255,255,.9);
+    --font-body:'Inter',-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;
+    --font-disp:'Oswald','PingFang SC','Microsoft YaHei',sans-serif;
+    --shadow:0 18px 40px -18px rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--font-body);
+    color:var(--cream);
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(255,201,77,.18), transparent 60%),
+      linear-gradient(180deg,#072b32 0%, var(--sea-deep) 35%, #052a30 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:0 18px}
+
+  /* ---------- top nav ---------- */
+  header.bar{
+    position:sticky;top:0;z-index:50;
+    background:rgba(6,43,49,.82);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .bar-inner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 18px;max-width:980px;margin:0 auto}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--font-disp);font-weight:700;letter-spacing:.04em;font-size:1.05rem}
+  .brand .dot{width:22px;height:22px;border-radius:50%;background:conic-gradient(from 20deg,var(--sun) 0 30%,#fff 30% 50%,var(--sea-line) 50% 80%,#fff 80% 100%);box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.1)}
+  nav.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+  .nav-link{
+    font-family:var(--font-disp);font-size:.86rem;letter-spacing:.05em;
+    color:var(--cream);background:transparent;border:0;cursor:pointer;
+    padding:8px 12px;border-radius:999px;opacity:.72;transition:.18s;
+  }
+  .nav-link:hover{opacity:1;background:rgba(255,255,255,.06)}
+  .nav-link.active{opacity:1;background:var(--coral);color:#fff;box-shadow:0 4px 14px -4px var(--coral-deep)}
+  .nav-link:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+
+  /* ---------- sections ---------- */
+  .section{display:none;padding:34px 0 60px;animation:fade .4s ease}
+  .section.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .eyebrow{font-family:var(--font-disp);letter-spacing:.22em;font-size:.74rem;color:var(--sun);text-transform:uppercase}
+  h1.title{font-family:var(--font-disp);font-weight:700;font-size:clamp(2.2rem,7vw,3.6rem);line-height:1.02;letter-spacing:.01em;margin:8px 0 14px}
+  h2.heading{font-family:var(--font-disp);font-weight:700;font-size:clamp(1.5rem,4.4vw,2.1rem);letter-spacing:.02em;margin:0 0 6px}
+  .lead{color:#cfe2e0;max-width:60ch}
+
+  /* ---------- hero ---------- */
+  .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:30px;align-items:center}
+  .hero .sun{display:inline-block;color:var(--sun)}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+  .btn{
+    font-family:var(--font-disp);letter-spacing:.04em;font-size:.92rem;cursor:pointer;border:0;border-radius:999px;
+    padding:12px 20px;transition:.18s;display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn-primary{background:var(--coral);color:#fff;box-shadow:0 10px 24px -10px var(--coral-deep)}
+  .btn-primary:hover{transform:translateY(-2px)}
+  .btn-ghost{background:rgba(255,255,255,.08);color:var(--cream);border:1px solid rgba(255,255,255,.18)}
+  .btn-ghost:hover{background:rgba(255,255,255,.16)}
+  .btn:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+  .stats{display:flex;gap:26px;margin-top:26px;flex-wrap:wrap}
+  .stat .n{font-family:var(--font-disp);font-size:1.9rem;color:var(--sun);line-height:1}
+  .stat .l{font-size:.78rem;color:#bcd3d1;letter-spacing:.04em}
+
+  .hero-card{background:var(--card);border-radius:20px;padding:16px;box-shadow:var(--shadow)}
+
+  /* ---------- court ---------- */
+  .court{
+    position:relative;width:100%;aspect-ratio:2/1;border-radius:14px;overflow:hidden;
+    background:
+      repeating-linear-gradient(135deg, rgba(0,0,0,.018) 0 6px, transparent 6px 12px),
+      linear-gradient(160deg,#ecdaa8,#dcc384);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.06), inset 0 8px 24px rgba(0,0,0,.12);
+    touch-action:none;user-select:none;
+  }
+  .court-bg{position:absolute;inset:0;width:100%;height:100%}
+  .entities{position:absolute;inset:0}
+  .side-label{position:absolute;top:8px;font-family:var(--font-disp);font-size:.72rem;letter-spacing:.18em;color:rgba(16,38,44,.5)}
+  .side-label.left{left:10px}
+  .side-label.right{right:10px}
+  .net-label{position:absolute;top:6px;left:50%;transform:translateX(-50%);font-family:var(--font-disp);font-size:.62rem;letter-spacing:.2em;color:rgba(16,38,44,.55)}
+  .token{
+    position:absolute;width:30px;height:30px;border-radius:50%;transform:translate(-50%,-50%);
+    display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff;
+    font-family:var(--font-disp);transition:left .5s cubic-bezier(.4,.1,.2,1),top .5s cubic-bezier(.4,.1,.2,1);
+    box-shadow:0 4px 10px rgba(0,0,0,.3);z-index:2;
+  }
+  .court.dragmode .token{cursor:grab}
+  .court.dragmode .token.dragging{cursor:grabbing;transition:none;transform:translate(-50%,-50%) scale(1.12);z-index:5}
+  /* 战术场地由 JS 逐帧驱动，必须关掉 CSS 过渡，否则两套动画互相打架、球还没到位就开始下一段 */
+  #tacCourt .token{transition:none}
+  #heroCourt .token{transition:left 1.1s cubic-bezier(.45,.05,.2,1),top 1.1s cubic-bezier(.45,.05,.2,1)}
+  .token.mine{background:linear-gradient(160deg,#ff7a4d,#e1532a);border:2px solid #fff}
+  .token.opp{background:linear-gradient(160deg,#0e6b7c,#06414c);border:2px solid rgba(255,255,255,.85)}
+  .token.ball{
+    width:20px;height:20px;
+    background:conic-gradient(from 20deg,var(--sun) 0 30%,#fff 30% 50%,var(--sea-line) 50% 80%,#fff 80% 100%);
+    border:0;box-shadow:0 2px 6px rgba(0,0,0,.38),inset 0 0 0 1.4px rgba(0,0,0,.08);z-index:3;
+  }
+  .token.ball.pop{animation:ballpop .42s cubic-bezier(.34,1.4,.6,1)}
+  @keyframes ballpop{0%{transform:translate(-50%,-50%) scale(1)}45%{transform:translate(-50%,-50%) scale(1.5)}100%{transform:translate(-50%,-50%) scale(1)}}
+  /* 球的运动轨迹 */
+  .trail-layer{position:absolute;inset:0;z-index:1;pointer-events:none}
+  .trail-dot{position:absolute;width:8px;height:8px;border-radius:50%;transform:translate(-50%,-50%);background:var(--coral);display:none}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;color:var(--ink);font-size:.8rem}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .legend i{width:14px;height:14px;border-radius:50%;display:inline-block}
+  .lg-mine{background:linear-gradient(160deg,#ff7a4d,#e1532a)}
+  .lg-opp{background:linear-gradient(160deg,#0e6b7c,#06414c)}
+  .lg-ball{background:conic-gradient(from 20deg,var(--sun) 0 30%,#fff 30% 50%,var(--sea-line) 50% 80%,#fff 80% 100%)}
+
+  /* ---------- generic light card ---------- */
+  .panel{background:var(--card);color:var(--ink);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+  .panel h2.heading,.panel .eyebrow{color:var(--ink)}
+  .panel .eyebrow{color:var(--coral-deep)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:18px}
+  .mini{background:var(--card-2);border-radius:14px;padding:16px;border:1px solid rgba(16,38,44,.07)}
+  .mini h3{font-family:var(--font-disp);font-size:1.02rem;letter-spacing:.02em;margin-bottom:6px;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .mini p{font-size:.9rem;color:var(--ink-soft)}
+  .tag{display:inline-block;font-family:var(--font-disp);font-size:.66rem;letter-spacing:.12em;background:var(--coral);color:#fff;padding:3px 9px;border-radius:6px}
+
+  /* ---------- rules list ---------- */
+  .rule-row{display:flex;gap:14px;padding:14px 0;border-bottom:1px dashed rgba(16,38,44,.16)}
+  .rule-row:last-child{border-bottom:0}
+  .rule-row .num{font-family:var(--font-disp);font-size:1.3rem;color:var(--coral);min-width:34px}
+  .rule-row .body strong{color:var(--ink)}
+  .rule-row .body{color:var(--ink-soft);font-size:.93rem}
+  .pill{display:inline-block;background:var(--sun);color:#5a3d00;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:6px;margin-left:6px;letter-spacing:.03em}
+
+  /* ---------- tactics ---------- */
+  .tac-buttons{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .tac-btn{font-family:var(--font-disp);font-size:.82rem;letter-spacing:.03em;cursor:pointer;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--cream);padding:9px 14px;border-radius:10px;transition:.16s}
+  .tac-btn:hover{background:rgba(255,255,255,.14)}
+  .tac-btn.active{background:var(--sun);color:#4a3300;border-color:var(--sun);font-weight:600}
+  .tac-btn:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+  .tac-stage{display:grid;grid-template-columns:1.3fr .9fr;gap:18px;align-items:start}
+  .tac-side h3{font-family:var(--font-disp);font-size:1.25rem;color:var(--ink);margin-bottom:4px}
+  .step{font-family:var(--font-disp);letter-spacing:.1em;font-size:.74rem;color:var(--coral-deep)}
+  .caption{min-height:3.4em;color:var(--ink-soft);font-size:.95rem;margin:8px 0 16px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap}
+  .play{background:var(--coral);color:#fff}
+  .play:hover{transform:translateY(-2px)}
+
+  /* ---------- techniques ---------- */
+  .signals{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:18px}
+  .sig{background:var(--card-2);border-radius:14px;padding:14px;text-align:center;border:1px solid rgba(16,38,44,.07)}
+  .sig svg{width:54px;height:64px}
+  .sig .name{font-family:var(--font-disp);color:var(--ink);margin-top:6px;font-size:.95rem}
+  .sig .meaning{font-size:.78rem;color:var(--ink-soft)}
+
+  /* ---------- scorekeeper ---------- */
+  .score-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}
+  .team{background:linear-gradient(165deg,#0e6b7c,#063b45);border-radius:18px;padding:18px;text-align:center;box-shadow:var(--shadow);border:2px solid transparent}
+  .team.tA{background:linear-gradient(165deg,#ff7a4d,#c8461f)}
+  .team.serving{border-color:var(--sun);box-shadow:0 0 0 3px rgba(255,201,77,.25),var(--shadow)}
+  .team .tname{width:100%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:8px;color:#fff;font-family:var(--font-disp);font-size:1rem;text-align:center;padding:6px;letter-spacing:.04em}
+  .team .tname:focus-visible{outline:2px solid var(--sun)}
+  .team .pts{font-family:var(--font-disp);font-size:clamp(3.4rem,14vw,5.4rem);line-height:1;margin:8px 0;font-variant-numeric:tabular-nums}
+  .sets-dots{display:flex;gap:6px;justify-content:center;min-height:16px}
+  .sets-dots i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.25)}
+  .sets-dots i.on{background:var(--sun)}
+  .pm{display:flex;gap:8px;justify-content:center;margin-top:12px}
+  .pm button{width:46px;height:46px;border-radius:12px;border:0;font-size:1.4rem;font-weight:700;cursor:pointer;background:rgba(255,255,255,.16);color:#fff;font-family:var(--font-disp)}
+  .pm button.add{background:rgba(255,255,255,.92);color:var(--ink)}
+  .pm button:hover{transform:translateY(-2px)}
+  .pm button:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+  .center-col{display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:130px}
+  .setbox{background:var(--card);color:var(--ink);border-radius:14px;padding:14px;text-align:center}
+  .setbox .lab{font-size:.72rem;letter-spacing:.12em;color:var(--ink-soft);font-family:var(--font-disp)}
+  .setbox .val{font-family:var(--font-disp);font-size:1.6rem;color:var(--coral-deep)}
+  .switch-note{background:var(--sun);color:#5a3d00;border-radius:10px;padding:8px;text-align:center;font-size:.8rem;font-weight:600;min-height:34px;display:flex;align-items:center;justify-content:center}
+  .switch-note.flash{animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+  .score-tools{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+  .msg{margin-top:14px;text-align:center;font-family:var(--font-disp);font-size:1.1rem;letter-spacing:.04em;color:var(--sun);min-height:1.4em}
+
+  footer{padding:30px 0 50px;text-align:center;color:#7fa0a3;font-size:.8rem}
+
+  @media (max-width:760px){
+    .hero{grid-template-columns:1fr}
+    .grid2{grid-template-columns:1fr}
+    .tac-stage{grid-template-columns:1fr}
+    .nav-link{padding:7px 9px;font-size:.78rem}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important}
+    .token{transition:none!important}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-inner">
+    <div class="brand"><span class="dot"></span>沙排战术沙盘</div>
+    <nav class="tabs" aria-label="主导航">
+      <button class="nav-link active" data-target="home">概览</button>
+      <button class="nav-link" data-target="rules">规则</button>
+      <button class="nav-link" data-target="position">站位</button>
+      <button class="nav-link" data-target="tactics">战术演示</button>
+      <button class="nav-link" data-target="score">计分器</button>
+      <button class="nav-link" data-target="skills">技巧</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ HOME ============ -->
+  <section id="home" class="section active">
+    <div class="hero">
+      <div>
+        <p class="eyebrow">2 vs 2 · 16m × 8m · 沙地</p>
+        <h1 class="title">把<span class="sun">沙滩</span>搬上<br>你的战术板</h1>
+        <p class="lead">一个可交互的沙滩排球沙盘：拖动球员摆站位、播放战术动画、临场计分，再配上规则与技巧速查。两个人、一片沙、三次触球，所有门道都在这里。</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary" data-go="tactics">▶ 看战术演示</button>
+          <button class="btn btn-ghost" data-go="position">拖动摆站位</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="n">2</div><div class="l">每队人数 · 不可换人</div></div>
+          <div class="stat"><div class="n">21<span style="font-size:1rem">/15</span></div><div class="l">前两局 / 决胜局分数</div></div>
+          <div class="stat"><div class="n">3</div><div class="l">每方最多触球次数</div></div>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="court" id="heroCourt"></div>
+        <div class="legend">
+          <span><i class="lg-mine"></i>我方</span>
+          <span><i class="lg-opp"></i>对方</span>
+          <span><i class="lg-ball"></i>球</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-cards">
+      <div class="mini"><h3>📐 规则</h3><p>场地、触球、发球、拦网计触——和室内排球到底差在哪。</p></div>
+      <div class="mini"><h3>🧍 站位</h3><p>接发、拦防、双后——拖动两名球员实时调整阵型。</p></div>
+      <div class="mini"><h3>🎬 战术演示</h3><p>接发反击、拦防分工、交叉换位、进攻线路逐帧播放。</p></div>
+      <div class="mini"><h3>🔢 计分器</h3><p>自动判局、提示换场、记录发球权，决胜局自动切到 15 分。</p></div>
+    </div>
+  </section>
+
+  <!-- ============ RULES ============ -->
+  <section id="rules" class="section">
+    <p class="eyebrow">RULES · 核心规则</p>
+    <h2 class="heading" style="color:var(--sun)">沙排和室内排球，差别在细节</h2>
+    <p class="lead" style="margin-bottom:22px">规则以国际排联（FIVB）沙滩排球竞赛规则为准。下面是最该记住的几条。</p>
+    <div class="panel">
+      <div class="rule-row"><div class="num">01</div><div class="body"><strong>2 人成队，全程不可换人。</strong> 没有自由人、没有替补，体能与默契就是一切。</div></div>
+      <div class="rule-row"><div class="num">02</div><div class="body"><strong>场地 16m × 8m，没有进攻线。</strong> 比室内（18m × 9m）小，且全场任意位置都可以起跳进攻。男子网高 2.43m，女子 2.24m。</div></div>
+      <div class="rule-row"><div class="num">03</div><div class="body"><strong>每球得分制，三局两胜。</strong> 前两局打到 21 分，决胜局打到 15 分，均需<span class="pill">领先 2 分</span>才能赢局。</div></div>
+      <div class="rule-row"><div class="num">04</div><div class="body"><strong>拦网算一次触球。</strong> 这是和室内最大的不同：拦网手触到球后，本方只剩 2 次触球机会。</div></div>
+      <div class="rule-row"><div class="num">05</div><div class="body"><strong>不能用张开的手指"吊球"。</strong> 用指尖戳（cobra）或拳关节捅（poke）是合法的，张指轻吊会被判违例。</div></div>
+      <div class="rule-row"><div class="num">06</div><div class="body"><strong>上手传球过网要"垂直于双肩"。</strong> 想把球传过网，身体方向必须正对出球方向，否则判违例——所以很多人用垫球做二传。</div></div>
+      <div class="rule-row"><div class="num">07</div><div class="body"><strong>第一次触球可以"连击"。</strong> 接对方大力球时，球短暂连续触身体多个部位、只要在同一个动作里，是允许的。</div></div>
+      <div class="rule-row"><div class="num">08</div><div class="body"><strong>定期交换场地。</strong> 前两局每累计 7 分换一次场地，决胜局每 5 分换一次，抵消风向和阳光的影响。</div></div>
+      <div class="rule-row"><div class="num">09</div><div class="body"><strong>轮流发球、不能拦发球。</strong> 两人按固定顺序轮流发球；接发球方不得拦网或扣击发过来的球。</div></div>
+    </div>
+  </section>
+
+  <!-- ============ POSITION ============ -->
+  <section id="position" class="section">
+    <p class="eyebrow">POSITIONING · 站位</p>
+    <h2 class="heading" style="color:var(--sun)">拖动球员，摆出你的阵型</h2>
+    <p class="lead" style="margin-bottom:22px">直接用手指或鼠标拖动场上的 ① ② 两名球员。或点下面的按钮，一键切换常见阵型。</p>
+    <div class="grid2">
+      <div class="panel">
+        <div class="court dragmode" id="posCourt"></div>
+        <div class="legend"><span><i class="lg-mine"></i>① ② 我方球员（可拖动）</span></div>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">常见阵型</p>
+        <div class="tac-buttons" style="margin-top:10px">
+          <button class="tac-btn active" data-form="receive">接发球</button>
+          <button class="tac-btn" data-form="block">拦网防守</button>
+          <button class="tac-btn" data-form="double">双后防守</button>
+          <button class="tac-btn" data-form="serve">发球</button>
+        </div>
+        <h3 style="font-family:var(--font-disp);color:var(--ink);margin:6px 0 4px" id="formName">接发球站位</h3>
+        <p style="color:var(--ink-soft);font-size:.93rem" id="formDesc">两人前后或左右分割本方半场，覆盖直线与斜线落点。一传目标是把球垫到网前，方便同伴组织二传。</p>
+        <p style="color:var(--ink-soft);font-size:.85rem;margin-top:14px;border-top:1px dashed rgba(16,38,44,.16);padding-top:12px">提示：沙排没有固定轮转位置，谁拦谁防由临场分工决定——这也是为什么球员要不停换位。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TACTICS ============ -->
+  <section id="tactics" class="section">
+    <p class="eyebrow">TACTICS · 战术演示</p>
+    <h2 class="heading" style="color:var(--sun)">逐帧看懂一回合在发生什么</h2>
+    <p class="lead" style="margin-bottom:18px">选一个战术，按播放。球与球员会沿真实路线移动，每一步都有文字解说。</p>
+    <div class="tac-buttons">
+      <button class="tac-btn active" data-tac="sideout">接发反击</button>
+      <button class="tac-btn" data-tac="block">拦防分工</button>
+      <button class="tac-btn" data-tac="switch">交叉换位</button>
+      <button class="tac-btn" data-tac="shots">进攻线路</button>
+      <button class="tac-btn" data-tac="serve">发球落点</button>
+    </div>
+    <div class="panel">
+      <div class="tac-stage">
+        <div>
+          <div class="court" id="tacCourt"></div>
+          <div class="legend">
+            <span><i class="lg-mine"></i>我方</span>
+            <span><i class="lg-opp"></i>对方</span>
+            <span><i class="lg-ball"></i>球</span>
+          </div>
+        </div>
+        <div class="tac-side">
+          <h3 id="tacName">接发反击</h3>
+          <div class="step" id="tacStep">步骤 1 / 5</div>
+          <p class="caption" id="tacCaption"></p>
+          <div class="controls">
+            <button class="btn play" id="tacPlay">▶ 播放</button>
+            <button class="btn btn-ghost" id="tacReset" style="color:var(--ink);border-color:rgba(16,38,44,.2);background:rgba(16,38,44,.05)">↺ 重置</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCORE ============ -->
+  <section id="score" class="section">
+    <p class="eyebrow">SCOREBOARD · 计分器</p>
+    <h2 class="heading" style="color:var(--sun)">临场记分，自动判局</h2>
+    <p class="lead" style="margin-bottom:22px">点队名可改名。得分自动跟踪发球权、提示换场、判定局与整场胜负，决胜局自动切到 15 分制。</p>
+    <div class="panel">
+      <div class="score-grid">
+        <div class="team tA serving" id="teamA">
+          <input class="tname" id="nameA" value="主队" aria-label="主队队名">
+          <div class="pts" id="ptsA">0</div>
+          <div class="sets-dots" id="dotsA"></div>
+          <div class="pm">
+            <button data-team="0" data-d="-1" aria-label="主队减一分">−</button>
+            <button class="add" data-team="0" data-d="1" aria-label="主队加一分">＋</button>
+          </div>
+        </div>
+        <div class="center-col">
+          <div class="setbox"><div class="lab">第几局</div><div class="val" id="setNo">第 1 局</div><div class="lab" style="margin-top:6px">局分</div><div class="val" id="setScore">0 : 0</div></div>
+          <div class="switch-note" id="switchNote">距换场还有 7 分</div>
+        </div>
+        <div class="team" id="teamB">
+          <input class="tname" id="nameB" value="客队" aria-label="客队队名">
+          <div class="pts" id="ptsB">0</div>
+          <div class="sets-dots" id="dotsB"></div>
+          <div class="pm">
+            <button data-team="1" data-d="-1" aria-label="客队减一分">−</button>
+            <button class="add" data-team="1" data-d="1" aria-label="客队加一分">＋</button>
+          </div>
+        </div>
+      </div>
+      <div class="msg" id="scoreMsg"></div>
+      <div class="score-tools">
+        <button class="btn btn-ghost" id="undoBtn" style="color:var(--ink);border-color:rgba(16,38,44,.2);background:rgba(16,38,44,.05)">↶ 撤销</button>
+        <button class="btn btn-ghost" id="serveBtn" style="color:var(--ink);border-color:rgba(16,38,44,.2);background:rgba(16,38,44,.05)">⇄ 切换发球权</button>
+        <button class="btn btn-primary" id="resetBtn">重置比赛</button>
+      </div>
+    </div>
+    <p class="lead" style="font-size:.85rem;color:#9fb9bb;margin-top:14px">规则：每球得分。第 1、2 局 21 分封顶（领先 2 分胜局），决胜局 15 分。先胜两局者赢得整场。带金边的一队为当前发球方。</p>
+  </section>
+
+  <!-- ============ SKILLS ============ -->
+  <section id="skills" class="section">
+    <p class="eyebrow">SKILLS · 技巧</p>
+    <h2 class="heading" style="color:var(--sun)">从发球到防守的实战要点</h2>
+    <div class="grid-cards">
+      <div class="mini"><h3>🏐 发球</h3><p>飘球破坏对方一传判断；跳发施压；高吊球（天勾）利用阳光和风让对方仰头接球。瞄准两人结合部与底线深角。</p></div>
+      <div class="mini"><h3>🤲 一传 / 接发</h3><p>降低重心、垫面对准网前目标点。判断来球旋转，飘球别伸手去够，让它落进垫击范围再发力。</p></div>
+      <div class="mini"><h3>🙌 二传</h3><p>为避免上手传球被判连击/翻腕，沙排常用<strong>垫球做二传</strong>，把球稳稳送到同伴助跑路线上。</p></div>
+      <div class="mini"><h3>💥 扣球</h3><p>线路比力量更重要：打直线避开拦网手、斜线追深角、必要时用指尖/拳关节把球放到拦网身后。</p></div>
+      <div class="mini"><h3>🧱 拦网</h3><p>读手、读助跑方向决定封直线还是封斜线。拦不到就果断"撤防"（pull）退到后场补位。</p></div>
+      <div class="mini"><h3>🏖️ 沙地移动</h3><p>沙里跑不快，靠小碎步预判和提前卡位。起跳前踩实双脚，落地缓冲保护膝踝。</p></div>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <p class="eyebrow">背后手势暗号</p>
+      <h2 class="heading" style="font-size:1.4rem;color:var(--ink)">拦网手在背后比的"暗号"</h2>
+      <p style="color:var(--ink-soft);font-size:.93rem">网前拦网的人会把手放在背后，告诉身后的同伴自己准备封哪条线，同伴就去补另一边。一只手对应对方的一名进攻手。</p>
+      <div class="signals" id="signals"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>沙排战术沙盘 · 用于学习与教学演示 · 规则参照 FIVB 沙滩排球竞赛规则</footer>
+
+<script>
+/* ---------------- 通用：court 构建 ---------------- */
+function courtSVG(){
+  return `<svg class="court-bg" viewBox="0 0 200 100" preserveAspectRatio="none" aria-hidden="true">
+    <defs><pattern id="net" width="4" height="6" patternUnits="userSpaceOnUse">
+      <path d="M0 0V6 M2 0V6" stroke="rgba(255,255,255,.55)" stroke-width="0.5"/></pattern></defs>
+    <rect x="4" y="4" width="192" height="92" fill="none" stroke="rgba(255,255,255,.92)" stroke-width="1.4" rx="1.5"/>
+    <rect x="97.5" y="4" width="5" height="92" fill="url(#net)"/>
+    <line x1="100" y1="2" x2="100" y2="98" stroke="rgba(255,255,255,.92)" stroke-width="1.2"/>
+  </svg>`;
+}
+function labelFor(id){
+  if(id==='ball') return '';
+  if(id==='p1') return '1';
+  if(id==='p2') return '2';
+  if(id==='o1') return '对1';
+  if(id==='o2') return '对2';
+  return '';
+}
+function classFor(id){
+  if(id==='ball') return 'ball';
+  return id[0]==='o' ? 'opp' : 'mine';
+}
+function buildCourt(host, ids){
+  host.innerHTML = courtSVG();
+  host.insertAdjacentHTML('beforeend',
+    '<span class="side-label left">我方</span><span class="side-label right">对方</span><span class="net-label">NET</span>');
+  const layer=document.createElement('div'); layer.className='entities'; host.appendChild(layer);
+  const map={};
+  ids.forEach(id=>{
+    const el=document.createElement('div');
+    el.className='token '+classFor(id);
+    el.dataset.id=id;
+    el.textContent=labelFor(id);
+    layer.appendChild(el);
+    map[id]=el;
+  });
+  return map;
+}
+function setPos(el,x,y){ el.style.left=x+'%'; el.style.top=y+'%'; }
+
+/* ---------------- 导航 ---------------- */
+const navLinks=document.querySelectorAll('.nav-link');
+const sections=document.querySelectorAll('.section');
+function showSection(id){
+  sections.forEach(s=>s.classList.toggle('active', s.id===id));
+  navLinks.forEach(t=>{
+    const on=t.dataset.target===id;
+    t.classList.toggle('active',on);
+    t.setAttribute('aria-current', on?'page':'false');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+navLinks.forEach(t=>t.addEventListener('click',()=>showSection(t.dataset.target)));
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showSection(b.dataset.go)));
+
+/* ---------------- HERO 小动画 ---------------- */
+(function(){
+  const map=buildCourt(document.getElementById('heroCourt'),['o1','p1','p2','ball']);
+  const seq=[
+    {o1:[95,50],p1:[30,35],p2:[30,68],ball:[93,50]},
+    {o1:[95,50],p1:[33,42],p2:[30,68],ball:[34,44]},
+    {o1:[90,45],p1:[40,46],p2:[42,52],ball:[40,49]},
+    {o1:[88,40],p1:[44,48],p2:[42,52],ball:[82,72]}
+  ];
+  let i=0;
+  function step(){
+    const p=seq[i];
+    for(const k in p) setPos(map[k],p[k][0],p[k][1]);
+    i=(i+1)%seq.length;
+  }
+  step();
+  if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    setInterval(step,1600);
+  }
+})();
+
+/* ---------------- 站位：拖动 + 阵型 ---------------- */
+(function(){
+  const court=document.getElementById('posCourt');
+  const map=buildCourt(court,['p1','p2']);
+  const FORM={
+    receive:{pos:{p1:[30,32],p2:[30,68]},name:'接发球站位',desc:'两人前后或左右分割本方半场，覆盖直线与斜线落点。一传目标是把球垫到网前，方便同伴组织二传。'},
+    block:{pos:{p1:[46,38],p2:[18,66]},name:'拦网防守站位',desc:'①号上网拦网封住一条线，②号退到后场防守另一条线与吊球。拦网手与防守手要随对方进攻点移动。'},
+    double:{pos:{p1:[20,30],p2:[20,70]},name:'双后防守站位',desc:'放弃拦网、两人都退到后场，专防大力扣杀与各种线路。常用于对方拦网难度大或我方个子不占优时。'},
+    serve:{pos:{p1:[4,50],p2:[30,55]},name:'发球站位',desc:'①号在底线后发球，②号在场内做好接对方反击的准备。发完球后①号迅速进场参与防守。'}
+  };
+  function apply(k){
+    const f=FORM[k];
+    for(const id in f.pos) setPos(map[id],f.pos[id][0],f.pos[id][1]);
+    document.getElementById('formName').textContent=f.name;
+    document.getElementById('formDesc').textContent=f.desc;
+  }
+  apply('receive');
+  document.querySelectorAll('[data-form]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('[data-form]').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      apply(b.dataset.form);
+    });
+  });
+  // 拖动
+  let drag=null;
+  court.addEventListener('pointerdown',e=>{
+    const t=e.target.closest('.token'); if(!t)return;
+    drag=t; t.classList.add('dragging');
+    try{t.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  court.addEventListener('pointermove',e=>{
+    if(!drag)return;
+    const r=court.getBoundingClientRect();
+    let x=((e.clientX-r.left)/r.width)*100;
+    let y=((e.clientY-r.top)/r.height)*100;
+    x=Math.max(4,Math.min(96,x)); y=Math.max(6,Math.min(94,y));
+    setPos(drag,x,y);
+  });
+  function end(){ if(drag){drag.classList.remove('dragging');drag=null;} }
+  court.addEventListener('pointerup',end);
+  court.addEventListener('pointercancel',end);
+})();
+
+/* ---------------- 战术动画引擎 ---------------- */
+const TACTICS={
+  sideout:{name:'接发反击',entities:['o1','p1','p2','ball'],phases:[
+    {dur:0,caption:'对方准备发球，我方两人落位接发球。',pos:{o1:[95,50],p1:[30,32],p2:[30,68],ball:[93,50]}},
+    {dur:1.0,caption:'发球过网，飘向我方左侧的接发球员。',pos:{o1:[95,50],p1:[32,40],p2:[30,68],ball:[34,42]}},
+    {dur:1.0,caption:'一传垫到网前，同伴快速跟进准备做二传。',pos:{o1:[95,50],p1:[34,42],p2:[42,50],ball:[40,49]}},
+    {dur:0.9,caption:'二传把球做起，主攻沿斜线开始助跑起跳。',pos:{o1:[95,50],p1:[37,45],p2:[42,50],ball:[39,46]}},
+    {dur:0.8,caption:'高点扣球打向对方空当——SIDE OUT 成功，拿回发球权！',pos:{o1:[88,40],p1:[45,48],p2:[42,52],ball:[82,72]}}
+  ]},
+  block:{name:'拦防分工',entities:['o1','p1','p2','ball'],phases:[
+    {dur:0,caption:'对方在网前组织进攻，我方一人拦网、一人防守。',pos:{o1:[55,30],p1:[47,30],p2:[20,66],ball:[57,30]}},
+    {dur:1.0,caption:'①号封住直线，进攻被逼向斜线后场。',pos:{o1:[53,32],p1:[47,32],p2:[24,62],ball:[26,60]}},
+    {dur:1.0,caption:'②号把斜线球垫起，由防守转入反击组织。',pos:{o1:[55,35],p1:[44,36],p2:[32,55],ball:[40,50]}}
+  ]},
+  switch:{name:'交叉换位',entities:['p1','p2'],phases:[
+    {dur:0,caption:'初始：①号在网前拦网，②号在后场防守。',pos:{p1:[45,32],p2:[20,66]}},
+    {dur:1.4,caption:'完成这一回合后两人交叉换位，回到各自更擅长的拦网 / 防守区域。',pos:{p1:[45,66],p2:[20,32]}}
+  ]},
+  shots:{name:'进攻线路',entities:['p1','o1','o2','ball'],phases:[
+    {dur:0,caption:'我方网前进攻，对方一人拦网、一人后场防守。下面看三种线路。',pos:{p1:[47,42],o1:[53,42],o2:[82,70],ball:[47,42]}},
+    {dur:0.85,hold:0.7,caption:'① 直线：贴着边线快速下压，避开拦网手。',pos:{p1:[47,42],o1:[53,42],o2:[82,70],ball:[92,28]}},
+    {dur:0.5,hold:0.12,caption:'回到进攻点。',pos:{p1:[47,42],o1:[53,42],o2:[82,70],ball:[47,42]}},
+    {dur:0.85,hold:0.7,caption:'② 斜线（对角）：大力对角，落点最深、距离最长。',pos:{p1:[47,42],o1:[53,42],o2:[82,70],ball:[88,76]}},
+    {dur:0.5,hold:0.12,caption:'回到进攻点。',pos:{p1:[47,42],o1:[53,42],o2:[82,70],ball:[47,42]}},
+    {dur:1.0,hold:0.9,caption:'③ 吊球：用指尖戳或拳关节捅，把球放到拦网身后的空当。',pos:{p1:[47,42],o1:[53,42],o2:[82,70],ball:[62,55]}}
+  ]},
+  serve:{name:'发球落点',entities:['o1','p1','p2','ball'],phases:[
+    {dur:0,caption:'发球落点选择，目的都是给对方接发制造麻烦。',pos:{o1:[95,50],p1:[30,32],p2:[30,68],ball:[93,50]}},
+    {dur:0.9,hold:0.7,caption:'① 打结合部：球落在两人之间，制造"让球"的犹豫。',pos:{o1:[95,50],p1:[30,32],p2:[30,68],ball:[31,50]}},
+    {dur:0.5,hold:0.12,caption:'回到发球点。',pos:{o1:[95,50],p1:[30,32],p2:[30,68],ball:[93,50]}},
+    {dur:0.9,hold:0.7,caption:'② 追深角：压底线大角，让对方退着、仰着接球。',pos:{o1:[95,50],p1:[30,32],p2:[30,68],ball:[8,74]}},
+    {dur:0.5,hold:0.12,caption:'回到发球点。',pos:{o1:[95,50],p1:[30,32],p2:[30,68],ball:[93,50]}},
+    {dur:0.9,hold:0.9,caption:'③ 放短球：贴网小球，把后场防守者调到网前。',pos:{o1:[95,50],p1:[30,32],p2:[30,68],ball:[40,40]}}
+  ]}
+};
+
+const tacCourtEl=document.getElementById('tacCourt');
+const tacName=document.getElementById('tacName');
+const tacStep=document.getElementById('tacStep');
+const tacCaption=document.getElementById('tacCaption');
+const tacPlay=document.getElementById('tacPlay');
+
+const HOLD=0.5;               // 每段动画结束后的停顿（秒），让球明显"到位"
+let A={key:null,phases:null,ents:null,seg:0,t:0,mode:'move',holdT:0,fresh:true,playing:false,done:false,raf:0,last:0};
+function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;} // easeInOutCubic，起止更柔和
+function lerp(a,b,t){return a+(b-a)*t;}
+
+/* ---- 球的运动轨迹（对象池，不每帧创建 DOM） ---- */
+let trailEls=[], trail=[];
+const TRAIL_MAX=16;
+function buildTrail(host){
+  const old=host.querySelector('.trail-layer'); if(old) old.remove();
+  const layer=document.createElement('div'); layer.className='trail-layer';
+  trailEls=[];
+  for(let i=0;i<TRAIL_MAX;i++){ const d=document.createElement('div'); d.className='trail-dot'; layer.appendChild(d); trailEls.push(d); }
+  host.insertBefore(layer, host.querySelector('.entities'));
+  trail=[];
+}
+function renderTrail(){
+  for(let i=0;i<TRAIL_MAX;i++){
+    const d=trailEls[i], p=trail[i];
+    if(p){ d.style.display='block'; d.style.left=p.x+'%'; d.style.top=p.y+'%';
+           d.style.opacity=((i+1)/trail.length*0.5).toFixed(2);
+           const s=0.4+(i+1)/trail.length*0.6; d.style.transform=`translate(-50%,-50%) scale(${s.toFixed(2)})`; }
+    else d.style.display='none';
+  }
+}
+function pushTrail(x,y){
+  const last=trail[trail.length-1];
+  if(last && Math.hypot(last.x-x,last.y-y)<1.4) return;  // 按距离采样，避免堆叠
+  trail.push({x,y}); if(trail.length>TRAIL_MAX) trail.shift();
+  renderTrail();
+}
+function clearTrail(){ trail=[]; renderTrail(); }
+function popBall(){ const b=A.ents.ball; if(!b)return; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); }
+
+function renderPhase(i){
+  const p=A.phases[i].pos;
+  for(const id in A.ents){ const c=p[id]; if(c) setPos(A.ents[id],c[0],c[1]); }
+  tacCaption.textContent=A.phases[i].caption;
+  tacStep.textContent='步骤 '+(i+1)+' / '+A.phases.length;
+  clearTrail();
+}
+function updatePlayBtn(){
+  tacPlay.textContent = A.done ? '↺ 重播' : (A.playing ? '⏸ 暂停' : '▶ 播放');
+}
+function loadTactic(key){
+  cancelAnimationFrame(A.raf);
+  const tac=TACTICS[key];
+  A.key=key; A.phases=tac.phases; A.seg=0; A.t=0; A.mode='move'; A.holdT=0; A.fresh=true;
+  A.playing=false; A.done=false; A.last=0;
+  A.ents=buildCourt(tacCourtEl,tac.entities);
+  buildTrail(tacCourtEl);
+  tacName.textContent=tac.name;
+  renderPhase(0);
+  updatePlayBtn();
+}
+function resetTac(){
+  cancelAnimationFrame(A.raf);
+  A.seg=0; A.t=0; A.mode='move'; A.holdT=0; A.fresh=true; A.playing=false; A.done=false; A.last=0;
+  renderPhase(0); updatePlayBtn();
+}
+function frame(ts){
+  if(!A.playing) return;
+  if(!A.last) A.last=ts;
+  let dt=(ts-A.last)/1000; A.last=ts;
+  if(dt>0.1) dt=0.1;                       // 防止切回标签页时的大跳帧
+  const from=A.phases[A.seg].pos, to=A.phases[A.seg+1].pos;
+
+  if(A.mode==='move'){
+    if(A.fresh){                            // 一段动画开始时才更新解说
+      tacCaption.textContent=A.phases[A.seg+1].caption;
+      tacStep.textContent='步骤 '+(A.seg+2)+' / '+A.phases.length;
+      clearTrail(); A.fresh=false;
+    }
+    const segDur=A.phases[A.seg+1].dur||1;
+    A.t += dt/segDur;
+    const e=ease(Math.min(A.t,1));
+    for(const id in A.ents){
+      const f=from[id]||to[id], g=to[id]||from[id];
+      if(f&&g) setPos(A.ents[id], lerp(f[0],g[0],e), lerp(f[1],g[1],e));
+    }
+    if(to.ball){ const bf=from.ball||to.ball; pushTrail(lerp(bf[0],to.ball[0],e), lerp(bf[1],to.ball[1],e)); }
+    if(A.t>=1){                             // 关键：先把所有元素精确放到终点，再进入停顿
+      for(const id in A.ents){ const g=to[id]; if(g) setPos(A.ents[id],g[0],g[1]); }
+      if(to.ball) popBall();
+      const ph=A.phases[A.seg+1];
+      A.mode='hold'; A.holdT=(ph.hold!=null?ph.hold:HOLD);
+    }
+  } else {                                  // hold：停在终点，等球"落定"
+    A.holdT -= dt;
+    if(A.holdT<=0){
+      A.seg++;
+      if(A.seg>=A.phases.length-1){ A.playing=false; A.done=true; updatePlayBtn(); return; }
+      A.mode='move'; A.t=0; A.fresh=true;
+    }
+  }
+  A.raf=requestAnimationFrame(frame);
+}
+tacPlay.addEventListener('click',()=>{
+  if(A.done) resetTac();
+  A.playing=!A.playing;
+  if(A.playing){ A.last=0; A.raf=requestAnimationFrame(frame); }
+  else cancelAnimationFrame(A.raf);
+  updatePlayBtn();
+});
+document.getElementById('tacReset').addEventListener('click',resetTac);
+document.querySelectorAll('[data-tac]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('[data-tac]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    loadTactic(b.dataset.tac);
+  });
+});
+loadTactic('sideout');
+
+/* ---------------- 计分器 ---------------- */
+const S={names:['主队','客队'],pts:[0,0],sets:[0,0],setNo:1,server:0,finished:false,hist:[]};
+const el={
+  ptsA:document.getElementById('ptsA'),ptsB:document.getElementById('ptsB'),
+  dotsA:document.getElementById('dotsA'),dotsB:document.getElementById('dotsB'),
+  teamA:document.getElementById('teamA'),teamB:document.getElementById('teamB'),
+  setNo:document.getElementById('setNo'),setScore:document.getElementById('setScore'),
+  switchNote:document.getElementById('switchNote'),msg:document.getElementById('scoreMsg')
+};
+function target(){return S.setNo===3?15:15+6;} // 15 决胜 / 21 前两局
+function snapshot(){ S.hist.push(JSON.stringify({pts:S.pts,sets:S.sets,setNo:S.setNo,server:S.server,finished:S.finished})); if(S.hist.length>50)S.hist.shift(); }
+function dots(n){ let h=''; for(let i=0;i<2;i++)h+='<i class="'+(i<n?'on':'')+'"></i>'; return h; }
+function render(){
+  el.ptsA.textContent=S.pts[0]; el.ptsB.textContent=S.pts[1];
+  el.dotsA.innerHTML=dots(S.sets[0]); el.dotsB.innerHTML=dots(S.sets[1]);
+  el.setNo.textContent='第 '+S.setNo+' 局';
+  el.setScore.textContent=S.pts[0]+' : '+S.pts[1];
+  el.teamA.classList.toggle('serving',S.server===0 && !S.finished);
+  el.teamB.classList.toggle('serving',S.server===1 && !S.finished);
+  // 换场提示
+  const total=S.pts[0]+S.pts[1];
+  const interval=S.setNo===3?5:7;
+  if(S.finished){ el.switchNote.classList.remove('flash'); el.switchNote.textContent='本场结束'; }
+  else if(total>0 && total%interval===0){ el.switchNote.classList.add('flash'); el.switchNote.textContent='⇄ 请交换场地！'; }
+  else { el.switchNote.classList.remove('flash'); const rem=interval-(total%interval); el.switchNote.textContent='距换场还有 '+rem+' 分'; }
+}
+function checkSet(team){
+  const tg=target(), other=1-team;
+  if(S.pts[team]>=tg && S.pts[team]-S.pts[other]>=2){
+    S.sets[team]++;
+    if(S.sets[team]===2){
+      S.finished=true;
+      el.msg.textContent='🏆 '+S.names[team]+' 以 '+S.sets[team]+' : '+S.sets[other]+' 赢得比赛！';
+    } else {
+      el.msg.textContent=S.names[team]+' 拿下第 '+S.setNo+' 局！进入下一局。';
+      S.setNo++; S.pts=[0,0]; S.server=other; // 输方先发
+    }
+  }
+}
+function addPoint(team,d){
+  if(S.finished && d>0) return;
+  snapshot();
+  if(d>0){
+    S.pts[team]++; S.server=team;
+    el.msg.textContent='';
+    checkSet(team);
+  } else {
+    S.pts[team]=Math.max(0,S.pts[team]-1);
+  }
+  render();
+}
+document.querySelectorAll('.pm button').forEach(b=>{
+  b.addEventListener('click',()=>addPoint(+b.dataset.team,+b.dataset.d));
+});
+document.getElementById('undoBtn').addEventListener('click',()=>{
+  if(!S.hist.length)return;
+  const s=JSON.parse(S.hist.pop());
+  S.pts=s.pts;S.sets=s.sets;S.setNo=s.setNo;S.server=s.server;S.finished=s.finished;
+  el.msg.textContent=''; render();
+});
+document.getElementById('serveBtn').addEventListener('click',()=>{ S.server=1-S.server; render(); });
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  S.pts=[0,0];S.sets=[0,0];S.setNo=1;S.server=0;S.finished=false;S.hist=[];
+  el.msg.textContent=''; render();
+});
+document.getElementById('nameA').addEventListener('input',e=>{S.names[0]=e.target.value||'主队';});
+document.getElementById('nameB').addEventListener('input',e=>{S.names[1]=e.target.value||'客队';});
+render();
+
+/* ---------------- 手势暗号 ---------------- */
+(function(){
+  const hand=(fingers)=>{
+    // fingers: 数组表示哪几根手指竖起(0=食指..3=小指)，'fist' 拳头，'open' 五指
+    let f='';
+    if(fingers==='open'){
+      for(let i=0;i<4;i++) f+=`<rect x="${14+i*9}" y="${10-i%2*2}" width="6" height="${24-Math.abs(i-1.5)*2}" rx="3" fill="#10262c"/>`;
+      f+=`<rect x="6" y="30" width="8" height="16" rx="4" fill="#10262c" transform="rotate(-30 10 38)"/>`;
+    } else if(fingers==='fist'){
+      f=`<rect x="14" y="30" width="34" height="6" rx="3" fill="#10262c"/>`;
+    } else {
+      const up=fingers;
+      for(let i=0;i<4;i++){
+        const isUp=up.includes(i);
+        f+=`<rect x="${15+i*8}" y="${isUp?6:30}" width="6" height="${isUp?28:6}" rx="3" fill="${isUp?'#ff6a3d':'#10262c'}"/>`;
+      }
+    }
+    return `<svg viewBox="0 0 56 64" aria-hidden="true">
+      <rect x="12" y="34" width="34" height="26" rx="8" fill="#e6c98a"/>
+      ${f}
+      <rect x="12" y="34" width="34" height="26" rx="8" fill="none" stroke="#cba85f" stroke-width="1.5"/>
+    </svg>`;
+  };
+  const data=[
+    {svg:hand([0]),name:'1 根手指',meaning:'封"直线"——拦住进攻手身前的直线进攻'},
+    {svg:hand([0,1]),name:'2 根手指',meaning:'封"斜线"——拦住对角大斜线'},
+    {svg:hand('open'),name:'张开五指',meaning:'封"球"——盯着球随机应变去拦'},
+    {svg:hand('fist'),name:'握拳',meaning:'"不拦网"——拦网手撤下网，退到后场防守'}
+  ];
+  document.getElementById('signals').innerHTML=data.map(d=>
+    `<div class="sig">${d.svg}<div class="name">${d.name}</div><div class="meaning">${d.meaning}</div></div>`
+  ).join('');
+})();
+</script>
+</body>
+</html>
